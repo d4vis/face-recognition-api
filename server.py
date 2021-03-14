@@ -84,6 +84,7 @@ def register():
         session.commit()
     except:
         session.rollback()
+        return jsonify('unable to register user'), 400
     try:
         inserted_user = session.query(User).filter(
             User.email == user['email']).all()
@@ -120,6 +121,20 @@ def image():
         return jsonify(entries['entries'])
     except IndexError:
         return jsonify('unable to get entries'), 400
+
+
+@app.route('/delete', methods=['DELETE'])
+@cross_origin()
+def delete():
+    user_email = request.json['email']
+    deleted = session.query(User).filter(User.email == user_email).delete()
+    if deleted:
+        session.query(Login).filter(Login.email == user_email).delete()
+        session.commit()
+        return jsonify(f'{user_email} deleted'), 200
+    else:
+        session.rollback()
+        return jsonify('User not found'), 200    
 
 
 if __name__ == '__main__':
