@@ -3,9 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import MetaData, Table
 from sqlalchemy.orm import sessionmaker
 from flask import Flask, request, jsonify
-from flask_cors import cross_origin
+from flask_cors import CORS
 import bcrypt
 from datetime import datetime
+from clarifai.rest import ClarifaiApp
 
 
 def remove_sa_instance_state(data_object):
@@ -18,6 +19,8 @@ def request_to_dict(query_object):
 
 
 app = Flask(__name__)
+CORS(app)
+
 db_string = 'postgresql://postgres:123123qQ@localhost/smartbrain'
 engine = create_engine(db_string, echo=False)
 
@@ -39,7 +42,6 @@ session = Session(bind=engine)
 
 
 @app.route('/', methods=['GET'])
-@cross_origin()
 def all_users():
     req = session.query(User).all()
     user_list = request_to_dict(req)
@@ -47,9 +49,10 @@ def all_users():
 
 
 @app.route('/signin', methods=['POST'])
-@cross_origin()
 def signin():
     user = request.json
+    if (not user['password'] or not user['email']):
+        return jsonify('incorrect form submisson'), 400
     query = session.query(Login).filter(Login.email == user['email']).all()
     try:
         login_cred = request_to_dict(query)[0]
@@ -71,9 +74,10 @@ def signin():
 
 
 @app.route('/register', methods=['POST'])
-@cross_origin()
 def register():
     user = request.json
+    if (not user['password'] or not user['email'] or not user['name']):
+        return jsonify('incorrect form submisson'), 400
     hashed_pw = bcrypt.hashpw(user['password'].encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
     insertion_user = User(
@@ -95,7 +99,6 @@ def register():
 
 
 @app.route('/profile/<id>', methods=['GET'])
-@cross_origin()
 def profile(id):
     req = session.query(User).filter(User.id == id).all()
     try:
@@ -106,7 +109,6 @@ def profile(id):
 
 
 @app.route('/image', methods=['PUT'])
-@cross_origin()
 def image():
     user_id = request.json['id']
     try:
@@ -123,8 +125,19 @@ def image():
         return jsonify('unable to get entries'), 400
 
 
+@app.route('/imageurl', methods=['POST'])
+def imageurl():
+    user_url = request.json['input']
+    try:
+        clarifai_app = ClarifaiApp(api_key="52cd05dab8c34521a22be2c212408b85")
+        model = clarifai_app.models.get(
+            model_id="a403429f2ddf4b49b307e318f00e528b")
+        return model.predict_by_url(url=user_url), 200
+    except:
+        return jsonify('unable to work with API'), 400
+
+
 @app.route('/delete', methods=['DELETE'])
-@cross_origin()
 def delete():
     user_email = request.json['email']
     deleted = session.query(User).filter(User.email == user_email).delete()
@@ -134,7 +147,7 @@ def delete():
         return jsonify(f'{user_email} deleted'), 200
     else:
         session.rollback()
-        return jsonify('User not found'), 200    
+        return jsonify('User not found'), 200
 
 
 if __name__ == '__main__':
