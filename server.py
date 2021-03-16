@@ -128,9 +128,10 @@ def image():
 
 @app.route('/imageurl', methods=['POST'])
 def imageurl():
+    API_KEY = os.environ['API_KEY']
     user_url = request.json['input']
     try:
-        clarifai_app = ClarifaiApp(api_key="52cd05dab8c34521a22be2c212408b85")
+        clarifai_app = ClarifaiApp(api_key=API_KEY)
         model = clarifai_app.models.get(
             model_id="a403429f2ddf4b49b307e318f00e528b")
         return model.predict_by_url(url=user_url), 200
