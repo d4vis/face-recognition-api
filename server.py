@@ -21,24 +21,24 @@ def request_to_dict(query_object):
 app = Flask(__name__)
 CORS(app)
 
-db_string = 'postgresql://postgres:123123qQ@localhost/smartbrain'
-engine = create_engine(db_string, echo=False)
+# db_string = 'postgresql://postgres:123123qQ@localhost/smartbrain'
+# engine = create_engine(db_string, echo=False)
 
-Base = declarative_base()
-metadata = MetaData()
-
-
-class User(Base):
-    __table__ = Table('users', metadata, autoload_with=engine)
+# Base = declarative_base()
+# metadata = MetaData()
 
 
-class Login(Base):
-    __table__ = Table('login', metadata, autoload_with=engine)
+# class User(Base):
+#     __table__ = Table('users', metadata, autoload_with=engine)
 
 
-metadata.create_all(engine)
-Session = sessionmaker()
-session = Session(bind=engine)
+# class Login(Base):
+#     __table__ = Table('login', metadata, autoload_with=engine)
+
+
+# metadata.create_all(engine)
+# Session = sessionmaker()
+# session = Session(bind=engine)
 
 
 @app.route('/', methods=['GET'])
