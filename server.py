@@ -7,6 +7,7 @@ from flask_cors import CORS
 import bcrypt
 from datetime import datetime
 from clarifai.rest import ClarifaiApp
+import os
 
 
 def remove_sa_instance_state(data_object):
@@ -21,32 +22,31 @@ def request_to_dict(query_object):
 app = Flask(__name__)
 CORS(app)
 
-# db_string = 'postgresql://postgres:123123qQ@localhost/smartbrain'
-# engine = create_engine(db_string, echo=False)
+DATABASE_URL = os.environ['DATABASE_URL']
+engine = create_engine(DATABASE_URL, connect_args={'sslmode':'require'}, echo=False)
 
-# Base = declarative_base()
-# metadata = MetaData()
-
-
-# class User(Base):
-#     __table__ = Table('users', metadata, autoload_with=engine)
+Base = declarative_base()
+metadata = MetaData()
 
 
-# class Login(Base):
-#     __table__ = Table('login', metadata, autoload_with=engine)
+class User(Base):
+    __table__ = Table('users', metadata, autoload_with=engine)
 
 
-# metadata.create_all(engine)
-# Session = sessionmaker()
-# session = Session(bind=engine)
+class Login(Base):
+    __table__ = Table('login', metadata, autoload_with=engine)
+
+
+metadata.create_all(engine)
+Session = sessionmaker()
+session = Session(bind=engine)
 
 
 @app.route('/', methods=['GET'])
 def all_users():
-    # req = session.query(User).all()
-    # user_list = request_to_dict(req)
-    # return jsonify(user_list)
-    return jsonify("test123")
+    req = session.query(User).all()
+    user_list = request_to_dict(req)
+    return jsonify(user_list)
 
 
 @app.route('/signin', methods=['POST'])
@@ -152,6 +152,5 @@ def delete():
 
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
