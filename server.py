@@ -43,9 +43,10 @@ session = Session(bind=engine)
 
 @app.route('/', methods=['GET'])
 def all_users():
-    req = session.query(User).all()
-    user_list = request_to_dict(req)
-    return jsonify(user_list)
+    # req = session.query(User).all()
+    # user_list = request_to_dict(req)
+    # return jsonify(user_list)
+    return jsonify("test123")
 
 
 @app.route('/signin', methods=['POST'])
